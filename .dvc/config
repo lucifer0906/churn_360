@@ -1,0 +1,4 @@
+[core]
+    remote = localremote
+['remote "localremote"']
+    url = C:\Users\cheta\Desktop\FOLDERS\VIT\TY\MLOPS\CP_dvc_remote
