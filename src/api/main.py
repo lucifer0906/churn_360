@@ -10,6 +10,7 @@ import mlflow.sklearn
 import pandas as pd
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
+from prometheus_fastapi_instrumentator import Instrumentator
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 if str(PROJECT_ROOT) not in sys.path:
@@ -17,6 +18,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from src.config import DEFAULT_MODEL_NAME, DEFAULT_TRACKING_URI
 from src.data.load_and_clean import add_inference_features
+from src.monitoring.drift import record_prediction_input, record_prediction_outcome
 
 
 MODEL_ALIAS = "champion"
@@ -91,9 +93,14 @@ class PredictionResponse(BaseModel):
 
 app = FastAPI(
     title="Churn360 API",
-    version="0.3.0",
-    description="Stage 3 FastAPI service for customer churn prediction.",
+    version="0.7.0",
+    description="Customer churn prediction service with Prometheus monitoring.",
 )
+
+Instrumentator(
+    should_group_status_codes=False,
+    excluded_handlers=["/metrics"],
+).instrument(app).expose(app, include_in_schema=False, endpoint="/metrics")
 
 
 @lru_cache(maxsize=1)
@@ -125,6 +132,9 @@ def predict(payload: CustomerFeatures) -> PredictionResponse:
             status_code=500,
             detail=f"Prediction failed: {exc}",
         ) from exc
+
+    record_prediction_input(payload.model_dump())
+    record_prediction_outcome("Yes" if prediction == 1 else "No")
 
     return PredictionResponse(
         prediction=prediction,

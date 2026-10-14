@@ -156,3 +156,35 @@ admin / admin
 Trigger `churn360_training_pipeline`.
 
 Expected Stage 6 result: the DAG completes these tasks in order: ingestion, validation, preprocessing, feature engineering, training, evaluation, and model registration.
+
+## Stage 7: Monitoring with Prometheus and Grafana
+
+Start the API, Prometheus, and Grafana:
+
+```powershell
+docker compose --profile monitoring up --build
+```
+
+Open the monitoring tools:
+
+```text
+FastAPI metrics: http://127.0.0.1:8000/metrics
+Prometheus:      http://127.0.0.1:9090
+Grafana:         http://127.0.0.1:3000
+Grafana login:   admin / admin
+```
+
+Grafana automatically loads the `Churn360 API Monitoring` dashboard. It shows request rate,
+p95 prediction latency, error rate, churn outcomes, and drift metrics for `MonthlyCharges` and
+`tenure`.
+
+To demonstrate drift, keep the stack running and send a shifted batch of unusually high-charge
+customers:
+
+```powershell
+python scripts/simulate_drift.py --count 25
+```
+
+After Prometheus scrapes the API, the `MonthlyCharges PSI` and drift alert panels will rise.
+The drift monitor uses the most recent 20 successful prediction inputs and flags PSI values of
+`0.2` or higher.

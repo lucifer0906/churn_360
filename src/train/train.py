@@ -32,6 +32,7 @@ from src.config import (
     DEFAULT_EXPERIMENT_NAME,
     DEFAULT_MODEL_NAME,
     DEFAULT_TRACKING_URI,
+    normalize_local_mlflow_artifact_uris,
 )
 from src.data.load_and_clean import (
     RANDOM_STATE,
@@ -110,6 +111,8 @@ def evaluate_model(model: Pipeline, x_test: pd.DataFrame, y_test: pd.Series) -> 
 
 
 def configure_mlflow(tracking_uri: str | Path, experiment_name: str) -> None:
+    if str(tracking_uri) == DEFAULT_TRACKING_URI:
+        normalize_local_mlflow_artifact_uris()
     mlflow.set_tracking_uri(str(tracking_uri))
     mlflow.set_experiment(experiment_name)
 
