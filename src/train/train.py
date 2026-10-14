@@ -165,6 +165,7 @@ def train_all_models(
     experiment_name: str = DEFAULT_EXPERIMENT_NAME,
     registered_model_name: str = DEFAULT_MODEL_NAME,
     tracking_uri: str | Path = DEFAULT_TRACKING_URI,
+    results_path: str | Path | None = None,
 ) -> pd.DataFrame:
     if use_mlflow:
         configure_mlflow(tracking_uri, experiment_name)
@@ -208,6 +209,11 @@ def train_all_models(
     if use_mlflow and register_model:
         register_best_model(results, registered_model_name)
 
+    if results_path:
+        output = Path(results_path)
+        output.parent.mkdir(parents=True, exist_ok=True)
+        results.to_csv(output, index=False)
+
     return results
 
 
@@ -249,6 +255,12 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Log MLflow runs but skip model registry registration.",
     )
+    parser.add_argument(
+        "--results-path",
+        type=str,
+        default=None,
+        help="Optional path to save model metrics and MLflow run IDs as CSV.",
+    )
     return parser.parse_args()
 
 
@@ -261,6 +273,7 @@ def main() -> None:
         experiment_name=args.experiment_name,
         registered_model_name=args.model_name,
         tracking_uri=args.tracking_uri,
+        results_path=args.results_path,
     )
 
     display_columns = [
@@ -283,8 +296,11 @@ def main() -> None:
 
     if not args.no_mlflow:
         print("\nMLflow experiment:", args.experiment_name)
-        print("Registered model:", args.model_name)
-        print("Champion alias: champion")
+        if args.skip_registration:
+            print("Model registration skipped.")
+        else:
+            print("Registered model:", args.model_name)
+            print("Champion alias: champion")
         print("Open the tracking UI with:")
         print(f"  mlflow ui --backend-store-uri {args.tracking_uri}")
 

@@ -1,0 +1,13 @@
+FROM apache/airflow:2.10.5-python3.12
+
+USER root
+
+RUN python -m venv /opt/churn360-venv \
+    && chown -R airflow:0 /opt/churn360-venv
+
+USER airflow
+
+COPY requirements-airflow.txt /requirements-airflow.txt
+RUN /opt/churn360-venv/bin/pip install --no-cache-dir -r /requirements-airflow.txt
+
+ENV CHURN360_PYTHON=/opt/churn360-venv/bin/python

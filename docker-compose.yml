@@ -14,3 +14,58 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
+
+  airflow-init:
+    build:
+      context: .
+      dockerfile: Dockerfile.airflow
+    image: churn360-airflow:stage6
+    profiles: ["airflow"]
+    environment:
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/project/dags
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+      _AIRFLOW_WWW_USER_USERNAME: admin
+      _AIRFLOW_WWW_USER_PASSWORD: admin
+    volumes:
+      - ./:/opt/airflow/project
+      - airflow-home:/opt/airflow
+    command: ["bash", "-c", "airflow db migrate && airflow users create --username admin --password admin --firstname Churn --lastname Admin --role Admin --email admin@example.com || true"]
+
+  airflow-webserver:
+    image: churn360-airflow:stage6
+    profiles: ["airflow"]
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/project/dags
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+    volumes:
+      - ./:/opt/airflow/project
+      - airflow-home:/opt/airflow
+    ports:
+      - "8080:8080"
+    command: ["airflow", "webserver"]
+
+  airflow-scheduler:
+    image: churn360-airflow:stage6
+    profiles: ["airflow"]
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/project/dags
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: sqlite:////opt/airflow/airflow.db
+    volumes:
+      - ./:/opt/airflow/project
+      - airflow-home:/opt/airflow
+    command: ["airflow", "scheduler"]
+
+volumes:
+  airflow-home:

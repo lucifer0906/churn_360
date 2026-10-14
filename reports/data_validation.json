@@ -1,0 +1,8 @@
+{
+  "rows_positive": true,
+  "required_columns_present": true,
+  "target_values_valid": true,
+  "missing_columns": [],
+  "row_count": 7043,
+  "passed": true
+}

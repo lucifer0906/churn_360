@@ -130,3 +130,29 @@ dvc pull
 ```
 
 Expected Stage 5 result: DVC tracks the raw dataset, processed dataset, MLflow model artifacts, and local MLflow registry database metadata.
+
+## Stage 6: Airflow Orchestration
+
+The Airflow DAG is `churn360_training_pipeline`.
+
+Start Airflow:
+
+```powershell
+docker compose --profile airflow up --build airflow-init airflow-webserver airflow-scheduler
+```
+
+Open the Airflow UI:
+
+```text
+http://127.0.0.1:8080
+```
+
+Login:
+
+```text
+admin / admin
+```
+
+Trigger `churn360_training_pipeline`.
+
+Expected Stage 6 result: the DAG completes these tasks in order: ingestion, validation, preprocessing, feature engineering, training, evaluation, and model registration.

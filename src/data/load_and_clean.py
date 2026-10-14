@@ -49,16 +49,22 @@ def clean_telco_data(raw_df: pd.DataFrame) -> pd.DataFrame:
         df["TotalCharges"] = pd.to_numeric(df["TotalCharges"], errors="coerce")
         df["TotalCharges"] = df["TotalCharges"].fillna(df["TotalCharges"].median())
 
-    df[TARGET_COLUMN] = (
-        df[TARGET_COLUMN]
-        .astype(str)
-        .str.strip()
-        .str.lower()
-        .map({"yes": 1, "no": 0})
-    )
+    target = df[TARGET_COLUMN]
+    if pd.api.types.is_numeric_dtype(target):
+        df[TARGET_COLUMN] = target.astype(int)
+    else:
+        df[TARGET_COLUMN] = (
+            target.astype(str)
+            .str.strip()
+            .str.lower()
+            .map({"yes": 1, "no": 0})
+        )
 
     if df[TARGET_COLUMN].isna().any():
-        raise ValueError("Target column contains values other than Yes/No.")
+        raise ValueError("Target column contains values other than Yes/No or 0/1.")
+
+    if not set(df[TARGET_COLUMN].unique()).issubset({0, 1}):
+        raise ValueError("Target column must contain only binary churn values.")
 
     df[TARGET_COLUMN] = df[TARGET_COLUMN].astype(int)
     return df
