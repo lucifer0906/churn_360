@@ -31,7 +31,8 @@ def rewrite_table_column(
 
 def main() -> None:
     if not DB_PATH.exists():
-        raise FileNotFoundError(f"MLflow database not found: {DB_PATH}")
+        print("No local MLflow database found; skipping artifact URI preparation.")
+        return
 
     with sqlite3.connect(DB_PATH) as connection:
         cursor = connection.cursor()

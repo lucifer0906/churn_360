@@ -188,3 +188,16 @@ python scripts/simulate_drift.py --count 25
 After Prometheus scrapes the API, the `MonthlyCharges PSI` and drift alert panels will rise.
 The drift monitor uses the most recent 20 successful prediction inputs and flags PSI values of
 `0.2` or higher.
+
+## Stage 8: CI/CD with GitHub Actions
+
+Every push and pull request to `main` runs `.github/workflows/ci.yml`. It performs unit and API
+tests, checks that the best saved model has F1 at least `0.60`, and builds the API Docker image.
+
+The CI Docker build intentionally does not need DVC artifacts. To run a functional model-serving
+container after a fresh clone, restore tracked artifacts first:
+
+```powershell
+dvc pull
+docker compose up --build
+```
